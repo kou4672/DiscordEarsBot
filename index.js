@@ -281,6 +281,7 @@ async function connect(msg, mapKey) {
             'voice_Connection': voice_Connection,
             'selected_lang': 'en',
             'debug': false,
+            'msg': msg,
         });
         speak_impl(voice_Connection.receiver, mapKey)
         voice_Connection.on(DiscoidVoice.VoiceConnectionStatus.Disconnected, async(e) => {
@@ -469,7 +470,8 @@ async function ensureConnection(mapKey, guildId) {
         const channel = discordClient.guilds.cache.get(guildId)?.me?.voice?.channel;
         if (!channel) {
             console.log('No voice channel to reconnect to.');
-            await connect(channel, mapKey);
+            const savedMsg = guildMap.get(mapKey)?.msg;
+            await connect(savedMsg, mapKey);
         }
     }
 }
