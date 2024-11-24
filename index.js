@@ -283,7 +283,6 @@ async function connect(msg, mapKey) {
             'debug': false,
         });
         speak_impl(voice_Connection.receiver, mapKey)
-        keepBotAlive(voice_Connection); // 無音を流す処理を開始
         voice_Connection.on(DiscoidVoice.VoiceConnectionStatus.Disconnected, async(e) => {
             if (e) console.log(e);
             guildMap.delete(mapKey);
@@ -464,12 +463,3 @@ async function transcribe_gspeech(buffer) {
 const keepAlive = require('./keep-alive');
 keepAlive();
 
-// 無音を流す処理
-function keepBotAlive(voice_Connection) {
-    setInterval(() => {
-        // 無音フレームを送信して接続を維持
-        const silenceStream = new Silence();
-        voice_Connection.play(silenceStream);
-        console.log('Sending silence to keep connection alive');
-    }, 5000); // 5秒毎に無音を流す
-}
