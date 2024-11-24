@@ -289,14 +289,17 @@ async function connect(msg, mapKey) {
             guildMap.delete(mapKey);
         })
         msg.reply('connected!')
-        // Periodically check the connection state
         setInterval(async () => {
-            const channel = discordClient.guilds.cache.get(guildId)?.me?.voice?.channel;
-            if (!channel) {
-                console.log('No voice channel to reconnect to.');
-                await connect(msg, mapKey);
-            } 
-        }, 5000); // Check every 5 seconds
+            for (let [mapKey, val] of guildMap) {
+                if (!val || !val.voice_Connection || val.voice_Connection.state.status !== 'ready') {
+                    const channel = discordClient.guilds.cache.get(val.guildId)?.me?.voice?.channel;
+                    if (!channel) {
+                        console.log('Attempting to reconnect...');
+                        await connect(msg, mapKey);
+                    }
+                }
+            }
+        }, 5000); 
     } catch (e) {
         console.log('connect: ' + e)
         msg.reply('Error: unable to join your voice channel.');
