@@ -154,12 +154,6 @@ function updateWitAIAppLang(appID, lang, cb) {
 
 const Discord = require('discord.js')
 
-class Silence extends Readable {
-    _read() {
-        // 無音データ (Opus用の無音パケット)
-        this.push(Buffer.from([0xF8, 0xFF, 0xFE]));
-    }
-}
 const DiscoidVoice = require('@discordjs/voice')
 const DISCORD_MSG_LIMIT = 2000;
 const discordClient = new Discord.Client({
