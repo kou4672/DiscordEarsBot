@@ -153,6 +153,14 @@ function updateWitAIAppLang(appID, lang, cb) {
 
 
 const Discord = require('discord.js')
+const { Readable } = require('stream');
+
+class Silence extends Readable {
+    _read() {
+        // 無音データ (Opus用の無音パケット)
+        this.push(Buffer.from([0xF8, 0xFF, 0xFE]));
+    }
+}
 const DiscoidVoice = require('@discordjs/voice')
 const DISCORD_MSG_LIMIT = 2000;
 const discordClient = new Discord.Client({
@@ -167,6 +175,20 @@ if (process.env.DEBUG)
     discordClient.on('debug', console.debug);
 discordClient.on('ready', () => {
     console.log(`Logged in as ${discordClient.user.tag}!`)
+
+    // 既存のコードの適切な位置に以下を追加
+    setInterval(() => {
+        guildMap.forEach((value, key) => {
+            if (value.voice_Connection) {
+                try {
+                    value.voice_Connection.play(new Silence(), { type: "opus" });
+                    console.log(`Sent silence to guild ${key}`);
+                } catch (e) {
+                    console.error(`Error sending silence to guild ${key}:`, e);
+                }
+            }
+        });
+    }, 10000);
 })
 discordClient.login(DISCORD_TOK)
 
