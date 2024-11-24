@@ -467,11 +467,9 @@ async function ensureConnection(mapKey, guildId) {
     const val = guildMap.get(mapKey);
     if (!val || !val.voice_Connection || val.voice_Connection.state.status !== 'ready') {
         const channel = discordClient.guilds.cache.get(guildId)?.me?.voice?.channel;
-        if (channel) {
-            console.log('Reconnecting to voice channel...');
-            await connect(channel, mapKey);
-        } else {
+        if (!channel) {
             console.log('No voice channel to reconnect to.');
+            await connect(channel, mapKey);
         }
     }
 }
@@ -481,4 +479,4 @@ setInterval(() => {
     guildMap.forEach((val, mapKey) => {
         ensureConnection(mapKey, val.guildId);
     });
-}, 10000); // 30•b‚²‚Æ‚ÉŠm”F
+}, 5000); // 30•b‚²‚Æ‚ÉŠm”F
