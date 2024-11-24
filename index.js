@@ -291,15 +291,11 @@ async function connect(msg, mapKey) {
         msg.reply('connected!')
         // Periodically check the connection state
         setInterval(async () => {
-            if (voice_Connection.status === DiscoidVoice.VoiceConnectionStatus.Disconnected) {
-                console.log('Voice connection disconnected, attempting to reconnect...');
-                try {
-                    // Try to reconnect by calling connect again
-                    await connect(msg, mapKey);
-                } catch (reconnectError) {
-                    console.log('Reconnect failed: ' + reconnectError);
-                }
-            }
+            const channel = discordClient.guilds.cache.get(guildId)?.me?.voice?.channel;
+            if (!channel) {
+                console.log('No voice channel to reconnect to.');
+                await connect(msg, mapKey);
+            } 
         }, 5000); // Check every 5 seconds
     } catch (e) {
         console.log('connect: ' + e)
