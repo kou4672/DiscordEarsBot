@@ -275,6 +275,18 @@ async function connect(msg, mapKey) {
           guildId: msg.guild.id,
           selfDeaf: false,
         });
+        // 切断イベントを監視するリスナーを追加
+        voice_Connection.on(DiscoidVoice.VoiceConnectionStatus.Disconnected, async (e) => {
+            console.log('Disconnected: ', e);
+            if (guildMap.has(mapKey)) {
+                try {
+                    console.log('Attempting to reconnect...');
+                    await connect(msg, mapKey);  // 再接続を試みる関数
+                } catch (reconnectError) {
+                    console.log('Reconnect failed: ', reconnectError);
+                }
+            }
+        });
         await DiscoidVoice.entersState(voice_Connection, DiscoidVoice.VoiceConnectionStatus.Ready, 20e3);
         guildMap.set(mapKey, {
             'text_Channel': text_Channel,
@@ -463,22 +475,3 @@ async function transcribe_gspeech(buffer) {
 
 const keepAlive = require('./keep-alive');
 keepAlive();
-
-async function ensureConnection(mapKey, guildId) {
-    const val = guildMap.get(mapKey);
-    if (!val || !val.voice_Connection || val.voice_Connection.state.status !== 'ready') {
-        const channel = discordClient.guilds.cache.get(guildId)?.me?.voice?.channel;
-        if (!channel) {
-            console.log('No voice channel to reconnect to.');
-            const savedMsg = guildMap.get(mapKey)?.msg;
-            await connect(savedMsg, mapKey);
-        }
-    }
-}
-
-// 定期的に接続状態を確認する
-setInterval(() => {
-    guildMap.forEach((val, mapKey) => {
-        ensureConnection(mapKey, val.guildId);
-    });
-}, 5000); // 30秒ごとに確認
