@@ -153,7 +153,6 @@ function updateWitAIAppLang(appID, lang, cb) {
 
 
 const Discord = require('discord.js')
-const { Readable } = require('stream');
 
 class Silence extends Readable {
     _read() {
