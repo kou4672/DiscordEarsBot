@@ -153,7 +153,6 @@ function updateWitAIAppLang(appID, lang, cb) {
 
 
 const Discord = require('discord.js')
-
 const DiscoidVoice = require('@discordjs/voice')
 const DISCORD_MSG_LIMIT = 2000;
 const discordClient = new Discord.Client({
@@ -168,20 +167,6 @@ if (process.env.DEBUG)
     discordClient.on('debug', console.debug);
 discordClient.on('ready', () => {
     console.log(`Logged in as ${discordClient.user.tag}!`)
-
-    // 既存のコードの適切な位置に以下を追加
-    setInterval(() => {
-        guildMap.forEach((value, key) => {
-            if (value.voice_Connection) {
-                try {
-                    value.voice_Connection.play(new Silence(), { type: "opus" });
-                    console.log(`Sent silence to guild ${key}`);
-                } catch (e) {
-                    console.error(`Error sending silence to guild ${key}:`, e);
-                }
-            }
-        });
-    }, 10000);
 })
 discordClient.login(DISCORD_TOK)
 
@@ -478,3 +463,22 @@ async function transcribe_gspeech(buffer) {
 const keepAlive = require('./keep-alive');
 keepAlive();
 
+async function ensureConnection(mapKey, guildId) {
+    const val = guildMap.get(mapKey);
+    if (!val || !val.voice_Connection || val.voice_Connection.state.status !== 'ready') {
+        const channel = discordClient.guilds.cache.get(guildId)?.me?.voice?.channel;
+        if (channel) {
+            console.log('Reconnecting to voice channel...');
+            await connect(channel, mapKey);
+        } else {
+            console.log('No voice channel to reconnect to.');
+        }
+    }
+}
+
+// 定期的に接続状態を確認する
+setInterval(() => {
+    guildMap.forEach((val, mapKey) => {
+        ensureConnection(mapKey, val.guildId);
+    });
+}, 10000); // 30秒ごとに確認
