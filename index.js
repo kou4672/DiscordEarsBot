@@ -275,18 +275,6 @@ async function connect(msg, mapKey) {
           guildId: msg.guild.id,
           selfDeaf: false,
         });
-        // 切断イベントを監視するリスナーを追加
-        voice_Connection.on(DiscoidVoice.VoiceConnectionStatus.Disconnected, async (e) => {
-            console.log('Disconnected: ', e);
-            if (guildMap.has(mapKey)) {
-                try {
-                    console.log('Attempting to reconnect...');
-                    await connect(msg, mapKey);  // 再接続を試みる関数
-                } catch (reconnectError) {
-                    console.log('Reconnect failed: ', reconnectError);
-                }
-            }
-        });
         await DiscoidVoice.entersState(voice_Connection, DiscoidVoice.VoiceConnectionStatus.Ready, 20e3);
         guildMap.set(mapKey, {
             'text_Channel': text_Channel,
@@ -301,6 +289,18 @@ async function connect(msg, mapKey) {
             guildMap.delete(mapKey);
         })
         msg.reply('connected!')
+        // Periodically check the connection state
+        setInterval(async () => {
+            if (voice_Connection.status === DiscoidVoice.VoiceConnectionStatus.Disconnected) {
+                console.log('Voice connection disconnected, attempting to reconnect...');
+                try {
+                    // Try to reconnect by calling connect again
+                    await connect(msg, mapKey);
+                } catch (reconnectError) {
+                    console.log('Reconnect failed: ' + reconnectError);
+                }
+            }
+        }, 5000); // Check every 5 seconds
     } catch (e) {
         console.log('connect: ' + e)
         msg.reply('Error: unable to join your voice channel.');
